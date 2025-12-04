@@ -1,8 +1,6 @@
 from create_model import *
 import torch # нахуй tensorflow багованый
 
-from torch import nn 
-
 from config import *
 
 model.eval() # режим оценки
@@ -18,6 +16,3 @@ with torch.no_grad():
         correct += (predicted == labels).sum().item()
 
     print(f"точность модели на 10000 тестовых пикчах: {(correct / total) * 100}%")
-
-# сохранение модели
-torch.save(model.state_dict(), store_path + 'cnn_model.ckpt') 

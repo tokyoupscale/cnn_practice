@@ -36,11 +36,11 @@ test_dataset = datasets.MNIST(root=TEST_DATA_PATH, train=False, transform=trans)
 train_dataloader = DataLoader(dataset=training_data, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False)
 
-# вывод информации о датасете
+# вывод информации о датасете (размеры и типы данных)
 for X, y in test_dataloader:
     print(f"Shape of X [N, C, H, W]: {X.shape}")
     print(f"Shape of y: {y.shape} {y.dtype}")
-    break
+    break # break чтобы не выводило оч много в консоль
 
 # выбор акселератора (cpu/gpu)
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
@@ -50,7 +50,7 @@ print(f"используем {device}")
 class CNN(nn.Module):
     # в pytorch слои сетки определяются в __init__
     def __init__(self):
-        super(CNN, self).__init__()
+        super(CNN, self).__init__() #создание обьекта базового класса
 
         # sequential - 
         self.layer1 = nn.Sequential(
@@ -81,6 +81,7 @@ class CNN(nn.Module):
         self.fc1 = nn.Linear(7 * 7  * 64, 1000)
         self.fc2 = nn.Linear(1000,10)
     
+    # метод для определения принципов распространения данных по слоям сети
     def forward(self, x):
         out = self.layer1(x)
         out = self.layer2(out)
@@ -90,8 +91,12 @@ class CNN(nn.Module):
         out = self.fc2(out)
         return out
 
-model = CNN()
+model = CNN() # создание экземпляра модели с указанной архитектурой выше
+print(model)
+
 criterion = nn.CrossEntropyLoss() # функция подсчета потерь
+
+# выбран метод оптимизации через оптимизатор Adam
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001) # lr = learning rate
 
 total_step = len(train_dataloader)
@@ -118,3 +123,6 @@ for epoch in range(epochs):
             print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
                   .format(epoch + 1, epochs, i + 1, total_step, loss.item(),
                           (correct / total) * 100))
+         
+# model.state_dict() сохраняет ток веса
+torch.save(model, store_path + 'cnn_model.pt') 
