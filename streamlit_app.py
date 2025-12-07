@@ -7,6 +7,13 @@ from io import BytesIO
 import numpy as np
 from PIL import Image
 
+st.set_page_config(
+    page_title="MNIST Recognition",
+    page_icon="🔢",
+    layout="centered"
+)
+
+API_URL = "http://localhost:8000"
 
 st.title("Распознавание рукописных цифр")
 st.markdown("""

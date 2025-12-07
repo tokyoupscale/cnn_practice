@@ -6,6 +6,12 @@ from torch.utils.data import DataLoader # загрузчик данных
 from torchvision import datasets # импорт публичных датаестов
 from torchvision.transforms import ToTensor, Compose, Normalize # totensor преобразует PIL картинку (array [0,255]) в тензор (CxHxW) 
 # normalize - приведение в один рендж
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent))
+from cnn.config import *
+
 from config import *
 
 # загрузка датасета mnist с циферками и предварительное разделение на test/train
