@@ -6,11 +6,6 @@ from torch.utils.data import DataLoader # загрузчик данных
 from torchvision import datasets # импорт публичных датаестов
 from torchvision.transforms import ToTensor, Compose, Normalize # totensor преобразует PIL картинку (array [0,255]) в тензор (CxHxW) 
 # normalize - приведение в один рендж
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent))
-from cnn.config import *
 
 from config import *
 
@@ -100,35 +95,59 @@ class CNN(nn.Module):
 model = CNN() # создание экземпляра модели с указанной архитектурой выше
 print(model)
 
-criterion = nn.CrossEntropyLoss() # функция подсчета потерь
-
-# выбран метод оптимизации через оптимизатор Adam
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001) # lr = learning rate
-
-total_step = len(train_dataloader)
-loss_list = []
-acc_list = []
-
-for epoch in range(epochs):
-    for i, (images, labels) in enumerate(train_dataloader):
-        outputs = model(images)
-        loss = criterion(outputs, labels)
-        loss_list.append(loss.item())
-
-        optimizer.zero_grad() # обнуление градиентов
-        loss.backward()
-        optimizer.step()
-
-        # отслеживание точности
-        total = labels.size(0)
-        _, predicted = torch.max(outputs.data, 1)
-        correct = (predicted == labels).sum().item()
-        acc_list.append(correct / total)
-
-        if (i + 1) % 100 == 0:
-            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
-                  .format(epoch + 1, epochs, i + 1, total_step, loss.item(),
-                          (correct / total) * 100))
-         
 # model.state_dict() сохраняет ток веса
-torch.save(model, store_path + 'cnn_model.pt') 
+# torch.save(model, store_path + 'cnn_model.pt') 
+
+def load_model(wpath: str = "cnn/cnn_model.pt") -> torch.nn.Module:
+    model = CNN().to(device)
+    state_dict = torch.load(wpath, map_location=device)
+    model.load_state_dict(state_dict)
+    model.eval()
+    return model
+
+if __name__ == "__main__":
+    criterion = nn.CrossEntropyLoss() # функция подсчета потерь
+
+    # выбран метод оптимизации через оптимизатор Adam
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001) # lr = learning rate
+
+    total_step = len(train_dataloader)
+    loss_list = []
+    acc_list = []
+
+    for epoch in range(epochs):
+        for i, (images, labels) in enumerate(train_dataloader):
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            loss_list.append(loss.item())
+
+            optimizer.zero_grad() # обнуление градиентов
+            loss.backward()
+            optimizer.step()
+
+            # отслеживание точности
+            total = labels.size(0)
+            _, predicted = torch.max(outputs.data, 1)
+            correct = (predicted == labels).sum().item()
+            acc_list.append(correct / total)
+
+            if (i + 1) % 100 == 0:
+                print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
+                    .format(epoch + 1, epochs, i + 1, total_step, loss.item(),
+                            (correct / total) * 100))
+                
+    torch.save(model.state_dict(), store_path + 'cnn_model.pt')
+
+    model.eval() # режим оценки
+
+    # с выключенным автоградиентом тк он не нужен при тесте модели
+    with torch.no_grad():
+        correct = 0
+        total = 0
+        for images, labels in test_dataloader:
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+        print(f"точность модели на 10000 тестовых пикчах: {(correct / total) * 100}%")
